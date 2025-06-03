@@ -1,0 +1,19 @@
+# Audio processing
+librosa
+soundfile
+
+# Data handling
+numpy
+pandas
+
+# ML
+scikit-learn
+joblib
+
+# Visualization
+matplotlib
+seaborn
+tqdm
+
+# NN
+torch

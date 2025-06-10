@@ -23,7 +23,7 @@ labels_df = labels_df[[
 labels_df['song_id'] = labels_df['song_id'].astype(str)
 
 def is_focus_friendly(v, a):
-    return int((v >= 0) and (-0.5 <= a <= 0.2))
+    return int((v >= 5) and (-0.5 <= a <= 5))
 
 labels_df['label'] = labels_df.apply(lambda row: is_focus_friendly(row['valence_mean'], row['arousal_mean']), axis=1)
 

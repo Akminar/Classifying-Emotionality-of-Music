@@ -1,6 +1,5 @@
 import pandas as pd
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.model_selection import cross_val_score, cross_val_predict, StratifiedKFold, learning_curve
 import joblib
 import matplotlib.pyplot as plt
@@ -16,12 +15,12 @@ y = pd.read_csv("../data/processed_data/train_labels.csv").squeeze()
 clf = DecisionTreeClassifier(
     class_weight = "balanced",
     random_state = 42,
-    max_depth = 7,
-    min_samples_split = 5,
-    min_samples_leaf = 5
+    max_depth = 10,
+    min_samples_split = 10,
+    min_samples_leaf = 10
 )
 
-cv = StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
+cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 
 # Cross validation
 f1_scores = cross_val_score(clf, x, y, cv=cv, scoring='f1_weighted')

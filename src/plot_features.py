@@ -21,7 +21,6 @@ merged_df = pd.read_csv("../data/merged_features.csv")
 non_feature_cols = ["song_id", "valence_mean", "valence_std", "arousal_mean", "arousal_std", "label"]
 feature_names = [col for col in merged_df.columns if col not in non_feature_cols]
 
-"""
 # Plot decision tree
 plt.figure(figsize=(20, 10))
 plot_tree(clf, feature_names=feature_names, class_names=["Distracting", "Focus-Friendly"], 
@@ -56,7 +55,7 @@ plt.show()
 
 # Classification Report
 print(classification_report(y, y_pred, target_names=["Distracting", "Focus-Friendly"]))
-"""
+
 # Learning Curves
 train_sizes, train_scores, val_scores = learning_curve(
     clf, x, y, cv=5, scoring="f1_weighted", train_sizes=np.linspace(0.1, 1.0, 10)

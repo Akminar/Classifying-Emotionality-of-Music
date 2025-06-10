@@ -19,13 +19,16 @@ x = torch.tensor(x, dtype=torch.float32)
 y = torch.tensor(y, dtype=torch.long)
 
 class MLP(nn.Module):
-    def __init__(self, input_dim, hidden_dim=64, dropout=0.3):
+    def __init__(self, input_dim, hidden_dim=64, dropout=0.2):
         super(MLP, self).__init__()
         self.model = nn.Sequential(
             nn.Linear(input_dim, hidden_dim),
             nn.ReLU(),
             nn.Dropout(dropout),
-            nn.Linear(hidden_dim, 2)
+            nn.Linear(hidden_dim, 32),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            nn.Linear(32, 2)
         )
 
     def forward(self, x):

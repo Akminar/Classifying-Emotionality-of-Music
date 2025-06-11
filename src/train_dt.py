@@ -16,8 +16,8 @@ clf = DecisionTreeClassifier(
     class_weight = "balanced",
     random_state = 42,
     max_depth = 10,
-    min_samples_split = 10,
-    min_samples_leaf = 10
+    min_samples_split = 2,
+    min_samples_leaf = 5
 )
 
 cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)

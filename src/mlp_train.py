@@ -86,7 +86,7 @@ for fold, (train_idx, val_idx) in enumerate(skf.split(x, y)):
     val_f1_per_epoch.append(val_f1_history)
 
 os.makedirs("../models", exist_ok=True)
-torch.save(best_model.state_dict(), "../models/best_mlp_model.pt")
+torch.save(best_model.state_dict(), "../models/mlp_model.pt")
 
 avg_train_f1 = np.mean(train_f1_per_epoch, axis=0)
 avg_val_f1 = np.mean(val_f1_per_epoch, axis=0)

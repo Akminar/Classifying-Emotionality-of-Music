@@ -19,13 +19,16 @@ x = torch.tensor(x, dtype=torch.float32)
 y = torch.tensor(y, dtype=torch.long)
 
 class MLP(nn.Module):
-    def __init__(self, input_dim, hidden_dim=64, dropout=0.2):
+    def __init__(self, input_dim, hidden_dim=128, dropout=0.2):
         super(MLP, self).__init__()
         self.model = nn.Sequential(
             nn.Linear(input_dim, hidden_dim),
             nn.ReLU(),
             nn.Dropout(dropout),
             nn.Linear(hidden_dim, 32),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            nn.Linear(32, 32),
             nn.ReLU(),
             nn.Dropout(dropout),
             nn.Linear(32, 2)
@@ -51,7 +54,9 @@ for fold, (train_idx, val_idx) in enumerate(skf.split(x, y)):
     y_train, y_val = y[train_idx], y[val_idx]
 
     model = MLP(input_dim=x.shape[1])
-    criterion = nn.CrossEntropyLoss()
+    class_counts = torch.bincount(y_train)
+    class_weights = 1.0 / class_counts.float()
+    criterion = nn.CrossEntropyLoss(weight=class_weights)
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
     train_f1_history = []
@@ -76,6 +81,10 @@ for fold, (train_idx, val_idx) in enumerate(skf.split(x, y)):
         val_f1_history.append(val_f1)
 
     print(f"Final Fold {fold + 1} Validation F1 score: {val_f1:.4f}")
+    val_true = y_val.cpu().numpy() if y_val.is_cuda else y_val.numpy()
+    val_pred = torch.argmax(val_preds, dim=1).cpu().numpy()
+    cm = confusion_matrix(val_true, val_pred)
+    print(f"Confusion Matrix for Fold {fold + 1}:\n{cm}")
     fold_results.append(val_f1)
 
     if val_f1 > best_f1:

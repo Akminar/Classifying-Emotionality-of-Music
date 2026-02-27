@@ -156,19 +156,35 @@ def plot(max_depth=MAX_DEPTH, min_samples_split=MIN_SAMPLES_SPLIT,
     plt.savefig(os.path.join(FIGURES_DIR, "dt_feature_importances.png"))
     plt.close()
 
-    # Confusion matrix
-    y_pred = clf.predict(x)
-    cm = confusion_matrix(y, y_pred)
-    disp = ConfusionMatrixDisplay(confusion_matrix=cm,
-                                  display_labels=["Distracting", "Focus-Friendly"])
-    disp.plot(cmap=plt.cm.Blues)
-    plt.title("Confusion Matrix")
+    # Confusion matrix — training set
+    y_pred_train = clf.predict(x)
+    cm_train = confusion_matrix(y, y_pred_train)
+    disp_train = ConfusionMatrixDisplay(confusion_matrix=cm_train,
+                                        display_labels=["Distracting", "Focus-Friendly"])
+    disp_train.plot(cmap=plt.cm.Blues)
+    plt.title("Confusion Matrix (Training Set)")
     plt.tight_layout()
-    plt.savefig(os.path.join(FIGURES_DIR, "dt_confusion_matrix.png"))
+    plt.savefig(os.path.join(FIGURES_DIR, "dt_confusion_matrix_train.png"))
     plt.close()
 
-    # Classification report
-    print(classification_report(y, y_pred,
+    # Confusion matrix — test set
+    x_test, y_test = load_test_data()
+    y_pred_test = clf.predict(x_test)
+    cm_test = confusion_matrix(y_test, y_pred_test)
+    disp_test = ConfusionMatrixDisplay(confusion_matrix=cm_test,
+                                       display_labels=["Distracting", "Focus-Friendly"])
+    disp_test.plot(cmap=plt.cm.Blues)
+    plt.title("Confusion Matrix (Test Set)")
+    plt.tight_layout()
+    plt.savefig(os.path.join(FIGURES_DIR, "dt_confusion_matrix_test.png"))
+    plt.close()
+
+    # Classification reports
+    print("=== Training Set ===")
+    print(classification_report(y, y_pred_train,
+                                target_names=["Distracting", "Focus-Friendly"]))
+    print("=== Test Set ===")
+    print(classification_report(y_test, y_pred_test,
                                 target_names=["Distracting", "Focus-Friendly"]))
 
     # Learning curves
@@ -178,6 +194,8 @@ def plot(max_depth=MAX_DEPTH, min_samples_split=MIN_SAMPLES_SPLIT,
         fresh_clf, x, y, cv=k_folds, scoring="f1_weighted",
         train_sizes=np.linspace(0.1, 1.0, 10),
     )
+
+    test_f1 = f1_score(y_test, y_pred_test, average="weighted")
 
     train_mean = np.mean(train_scores, axis=1)
     train_std = np.std(train_scores, axis=1)
@@ -189,6 +207,7 @@ def plot(max_depth=MAX_DEPTH, min_samples_split=MIN_SAMPLES_SPLIT,
     plt.fill_between(train_sizes, train_mean - train_std, train_mean + train_std, alpha=0.2)
     plt.plot(train_sizes, val_mean, label="Validation score", marker="s")
     plt.fill_between(train_sizes, val_mean - val_std, val_mean + val_std, alpha=0.2)
+    plt.axhline(y=test_f1, color="r", linestyle="--", label=f"Test score ({test_f1:.3f})")
     plt.title("Learning Curve: Decision Tree")
     plt.xlabel("Training Set Size")
     plt.ylabel("F1 Score (weighted)")

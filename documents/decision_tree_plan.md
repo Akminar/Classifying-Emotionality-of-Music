@@ -29,6 +29,7 @@ python decision_tree.py train
 | `seed` | 42 |
 
 Record the **mean F1 weighted score** from 5-fold CV.
+=0.6571906773016678
 
 ## Step 3: Hyperparameter Tuning
 

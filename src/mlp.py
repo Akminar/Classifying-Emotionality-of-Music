@@ -121,7 +121,17 @@ def train(hidden_dim=HIDDEN_DIM, dropout=DROPOUT, epochs=EPOCHS,
         val_f1_per_epoch.append(val_f1_history)
 
     os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
-    torch.save(best_model.state_dict(), MODEL_PATH)
+    torch.save({
+        "state_dict": best_model.state_dict(),
+        "hparams": {
+            "hidden_dim": hidden_dim,
+            "dropout": dropout,
+            "epochs": epochs,
+            "lr": lr,
+            "k_folds": k_folds,
+            "seed": seed,
+        },
+    }, MODEL_PATH)
     print(f"\nBest model saved to {MODEL_PATH}")
 
     # Plot learning curves
@@ -145,13 +155,32 @@ def train(hidden_dim=HIDDEN_DIM, dropout=DROPOUT, epochs=EPOCHS,
     return best_model
 
 
-def test(hidden_dim=HIDDEN_DIM, dropout=DROPOUT):
+def load_model(input_dim):
+    """Load saved checkpoint and reconstruct the model with saved hyperparameters."""
+    checkpoint = torch.load(MODEL_PATH, weights_only=False)
+
+    # Support both old (raw state_dict) and new (dict with hparams) formats
+    if "hparams" in checkpoint:
+        hparams = checkpoint["hparams"]
+        state_dict = checkpoint["state_dict"]
+    else:
+        hparams = {"hidden_dim": HIDDEN_DIM, "dropout": DROPOUT}
+        state_dict = checkpoint
+
+    model = MLP(input_dim=input_dim,
+                hidden_dim=hparams.get("hidden_dim", HIDDEN_DIM),
+                dropout=hparams.get("dropout", DROPOUT))
+    model.load_state_dict(state_dict)
+    model.eval()
+    return model, hparams
+
+
+def test():
     """Load the saved model and evaluate on the test set."""
     x_test, y_test = load_test_data()
 
-    model = MLP(input_dim=x_test.shape[1], hidden_dim=hidden_dim, dropout=dropout)
-    model.load_state_dict(torch.load(MODEL_PATH, weights_only=True))
-    model.eval()
+    model, hparams = load_model(x_test.shape[1])
+    print(f"Loaded model with hparams: {hparams}")
 
     pbar = tqdm(total=3, desc="Testing MLP")
 
@@ -175,18 +204,20 @@ def test(hidden_dim=HIDDEN_DIM, dropout=DROPOUT):
                                 target_names=["Distracting", "Focus-Friendly"]))
 
 
-def plot(hidden_dim=HIDDEN_DIM, dropout=DROPOUT, epochs=EPOCHS,
-         lr=LEARNING_RATE, k_folds=K_FOLDS, seed=SEED):
+def plot():
     """Generate confusion matrices (train & test) and learning curves."""
-    torch.manual_seed(seed)
-
-    # Load model
     x_train, y_train = load_train_data()
     x_test, y_test = load_test_data()
 
-    model = MLP(input_dim=x_train.shape[1], hidden_dim=hidden_dim, dropout=dropout)
-    model.load_state_dict(torch.load(MODEL_PATH, weights_only=True))
-    model.eval()
+    model, hparams = load_model(x_train.shape[1])
+    hidden_dim = hparams.get("hidden_dim", HIDDEN_DIM)
+    dropout = hparams.get("dropout", DROPOUT)
+    epochs = hparams.get("epochs", EPOCHS)
+    lr = hparams.get("lr", LEARNING_RATE)
+    k_folds = hparams.get("k_folds", K_FOLDS)
+    seed = hparams.get("seed", SEED)
+    torch.manual_seed(seed)
+    print(f"Plotting with saved hparams: {hparams}")
 
     os.makedirs(FIGURES_DIR, exist_ok=True)
 
@@ -316,8 +347,6 @@ if __name__ == "__main__":
               epochs=args.epochs, lr=args.lr, k_folds=args.folds,
               seed=args.seed)
     elif args.action == "test":
-        test(hidden_dim=args.hidden_dim, dropout=args.dropout)
+        test()
     elif args.action == "plot":
-        plot(hidden_dim=args.hidden_dim, dropout=args.dropout,
-             epochs=args.epochs, lr=args.lr, k_folds=args.folds,
-             seed=args.seed)
+        plot()

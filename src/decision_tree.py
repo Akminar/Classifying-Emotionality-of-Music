@@ -92,9 +92,34 @@ def train(max_depth=MAX_DEPTH, min_samples_split=MIN_SAMPLES_SPLIT,
     clf.fit(x, y)
 
     os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
-    joblib.dump(clf, MODEL_PATH)
+    joblib.dump({
+        "model": clf,
+        "hparams": {
+            "max_depth": max_depth,
+            "min_samples_split": min_samples_split,
+            "min_samples_leaf": min_samples_leaf,
+            "class_weight": class_weight,
+            "k_folds": k_folds,
+            "seed": seed,
+        },
+    }, MODEL_PATH)
     print(f"Model saved to {MODEL_PATH}")
     return clf
+
+
+def load_model():
+    """Load saved checkpoint and return the classifier and hyperparameters."""
+    checkpoint = joblib.load(MODEL_PATH)
+
+    # Support both old (raw clf) and new (dict with hparams) formats
+    if isinstance(checkpoint, dict) and "hparams" in checkpoint:
+        return checkpoint["model"], checkpoint["hparams"]
+
+    return checkpoint, {
+        "max_depth": MAX_DEPTH, "min_samples_split": MIN_SAMPLES_SPLIT,
+        "min_samples_leaf": MIN_SAMPLES_LEAF, "class_weight": CLASS_WEIGHT,
+        "k_folds": K_FOLDS, "seed": SEED,
+    }
 
 
 def test():
@@ -103,7 +128,8 @@ def test():
 
     pbar.set_postfix_str("Loading data & model")
     x_test, y_test = load_test_data()
-    clf = joblib.load(MODEL_PATH)
+    clf, hparams = load_model()
+    print(f"Loaded model with hparams: {hparams}")
     pbar.update(1)
 
     pbar.set_postfix_str("Predicting")
@@ -121,11 +147,17 @@ def test():
                                 target_names=["Distracting", "Focus-Friendly"]))
 
 
-def plot(max_depth=MAX_DEPTH, min_samples_split=MIN_SAMPLES_SPLIT,
-         min_samples_leaf=MIN_SAMPLES_LEAF, class_weight=CLASS_WEIGHT,
-         k_folds=K_FOLDS, seed=SEED):
+def plot():
     """Generate all decision tree visualizations."""
-    clf = joblib.load(MODEL_PATH)
+    clf, hparams = load_model()
+    max_depth = hparams.get("max_depth", MAX_DEPTH)
+    min_samples_split = hparams.get("min_samples_split", MIN_SAMPLES_SPLIT)
+    min_samples_leaf = hparams.get("min_samples_leaf", MIN_SAMPLES_LEAF)
+    class_weight = hparams.get("class_weight", CLASS_WEIGHT)
+    k_folds = hparams.get("k_folds", K_FOLDS)
+    seed = hparams.get("seed", SEED)
+    print(f"Plotting with saved hparams: {hparams}")
+
     x, y = load_train_data()
     feature_names = get_feature_names()
 
@@ -241,7 +273,4 @@ if __name__ == "__main__":
     elif args.action == "test":
         test()
     elif args.action == "plot":
-        plot(max_depth=args.max_depth,
-             min_samples_split=args.min_samples_split,
-             min_samples_leaf=args.min_samples_leaf,
-             k_folds=args.folds, seed=args.seed)
+        plot()

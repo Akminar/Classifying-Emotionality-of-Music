@@ -30,6 +30,7 @@ python decision_tree.py train
 
 Record the **mean F1 weighted score** from 5-fold CV.
 
+
 ## Step 3: Hyperparameter Tuning
 
 Run these experiments one at a time, changing one parameter from baseline:
@@ -98,16 +99,16 @@ This saves to `figures/`:
 
 | Run | max_depth | min_samples_split | min_samples_leaf | Mean CV F1 |
 |---|---|---|---|---|
-| Baseline | 10 | 2 | 5 | |
-| A1 | 3 | 2 | 5 | |
-| A2 | 5 | 2 | 5 | |
-| A3 | 15 | 2 | 5 | |
-| A4 | 20 | 2 | 5 | |
-| B1 | 10 | 2 | 1 | |
-| B2 | 10 | 2 | 10 | |
-| B3 | 10 | 2 | 20 | |
-| C1 | 10 | 5 | 5 | |
-| C2 | 10 | 10 | 5 | |
-| C3 | 10 | 20 | 5 | |
-| **Final** | | | | |
+| Baseline | 10 | 2 | 5 | 0.6571906773016678 |
+| A1 | 3 | 2 | 5 | 0.5575396848062077 |
+| A2 | 5 | 2 | 5 | 0.6097876558660947 |
+| A3 | 15 | 2 | 5 | 0.705323497045365 |
+| A4 | 20 | 2 | 5 | 0.7247709631967728 |
+| B1 | 10 | 2 | 1 | 0.6710229722253506 |
+| B2 | 10 | 2 | 10 | 0.6368102592264953 |
+| B3 | 10 | 2 | 20 | 0.6623811801518523 |
+| C1 | 10 | 5 | 5 | 0.6571906773016678 |
+| C2 | 10 | 10 | 5 | 0.6571906773016678 |
+| C3 | 10 | 20 | 5 | 0.6392427901707378 |
+| **Final** | 20 | 1 | 5 | 0.7562237680144172 |
 | **Test** | | | | |

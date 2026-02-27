@@ -70,8 +70,8 @@ def train(hidden_dim=HIDDEN_DIM, dropout=DROPOUT, epochs=EPOCHS,
     train_f1_per_epoch = []
     val_f1_per_epoch = []
 
-    for fold, (train_idx, val_idx) in enumerate(skf.split(x, y)):
-        print(f"\nFold {fold + 1}/{k_folds}")
+    fold_iter = tqdm(enumerate(skf.split(x, y)), total=k_folds, desc="Folds")
+    for fold, (train_idx, val_idx) in fold_iter:
         x_train, x_val = x[train_idx], x[val_idx]
         y_train, y_val = y[train_idx], y[val_idx]
 
@@ -148,9 +148,20 @@ def test(hidden_dim=HIDDEN_DIM, dropout=DROPOUT):
     model.load_state_dict(torch.load(MODEL_PATH, weights_only=True))
     model.eval()
 
+    pbar = tqdm(total=3, desc="Testing MLP")
+
+    pbar.set_postfix_str("Loading data & model")
+    pbar.update(1)
+
+    pbar.set_postfix_str("Running inference")
     with torch.no_grad():
         outputs = model(x_test)
         predictions = torch.argmax(outputs, dim=1).numpy()
+    pbar.update(1)
+
+    pbar.set_postfix_str("Evaluating")
+    pbar.update(1)
+    pbar.close()
 
     print("MLP Confusion Matrix:")
     print(confusion_matrix(y_test.numpy(), predictions))

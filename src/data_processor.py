@@ -22,7 +22,7 @@ METADATA_COLS = ["song_id", "valence_mean", "valence_std", "arousal_mean", "arou
 
 def load_annotations():
     dfs = []
-    for f in ANNOTATION_FILES:
+    for f in tqdm(ANNOTATION_FILES, desc="Loading annotations"):
         df = pd.read_csv(f)
         df.columns = df.columns.str.strip()
         dfs.append(df)
@@ -80,9 +80,11 @@ def extract_all_features(labels_df):
 
 
 def merge_features(labels_df, features_df):
+    print("Merging features with annotations...")
     merged = pd.merge(labels_df, features_df, on="song_id")
 
-    merged["label"] = merged.apply(
+    tqdm.pandas(desc="Labeling rows")
+    merged["label"] = merged.progress_apply(
         lambda row: int((row["valence_mean"] >= 5) and (0 <= row["arousal_mean"] <= 5)),
         axis=1,
     )
@@ -95,6 +97,7 @@ def merge_features(labels_df, features_df):
 
 
 def split_data(merged_csv=MERGED_CSV):
+    print("Splitting data...")
     df = pd.read_csv(merged_csv)
 
     x = df.drop(columns=METADATA_COLS)
@@ -108,10 +111,14 @@ def split_data(merged_csv=MERGED_CSV):
     )
 
     os.makedirs(PROCESSED_DIR, exist_ok=True)
-    pd.DataFrame(x_train).to_csv(os.path.join(PROCESSED_DIR, "train_features.csv"), index=False)
-    pd.DataFrame(x_test).to_csv(os.path.join(PROCESSED_DIR, "test_features.csv"), index=False)
-    pd.Series(y_train).to_csv(os.path.join(PROCESSED_DIR, "train_labels.csv"), index=False)
-    pd.Series(y_test).to_csv(os.path.join(PROCESSED_DIR, "test_labels.csv"), index=False)
+    files = {
+        "train_features.csv": pd.DataFrame(x_train),
+        "test_features.csv": pd.DataFrame(x_test),
+        "train_labels.csv": pd.Series(y_train),
+        "test_labels.csv": pd.Series(y_test),
+    }
+    for name, data in tqdm(files.items(), desc="Saving split files"):
+        data.to_csv(os.path.join(PROCESSED_DIR, name), index=False)
     print("Train/test split complete")
 
 

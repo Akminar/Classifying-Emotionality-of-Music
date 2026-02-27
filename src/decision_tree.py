@@ -8,13 +8,14 @@ from sklearn.metrics import (
     ConfusionMatrixDisplay,
     classification_report,
     confusion_matrix,
+    f1_score,
 )
 from sklearn.model_selection import (
     StratifiedKFold,
-    cross_val_score,
     learning_curve,
 )
 from sklearn.tree import DecisionTreeClassifier, plot_tree
+from tqdm import tqdm
 
 BASE_DIR = os.path.join(os.path.dirname(__file__), "..")
 DATA_DIR = os.path.join(BASE_DIR, "data", "processed_data")
@@ -73,10 +74,21 @@ def train(max_depth=MAX_DEPTH, min_samples_split=MIN_SAMPLES_SPLIT,
                            class_weight, seed)
     cv = StratifiedKFold(n_splits=k_folds, shuffle=True, random_state=seed)
 
-    f1_scores = cross_val_score(clf, x, y, cv=cv, scoring="f1_weighted")
+    f1_scores = []
+    for fold, (train_idx, val_idx) in tqdm(enumerate(cv.split(x, y)),
+                                           total=k_folds, desc="CV Folds"):
+        fold_clf = build_classifier(max_depth, min_samples_split,
+                                    min_samples_leaf, class_weight, seed)
+        fold_clf.fit(x.iloc[train_idx], y.iloc[train_idx])
+        preds = fold_clf.predict(x.iloc[val_idx])
+        f1 = f1_score(y.iloc[val_idx], preds, average="weighted")
+        f1_scores.append(f1)
+
+    f1_scores = np.array(f1_scores)
     print("F1 Weighted Scores Per Fold:", f1_scores)
     print("Mean F1 Weighted Score:", np.mean(f1_scores))
 
+    print("Fitting on full training set...")
     clf.fit(x, y)
 
     os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
@@ -87,10 +99,21 @@ def train(max_depth=MAX_DEPTH, min_samples_split=MIN_SAMPLES_SPLIT,
 
 def test():
     """Load the saved model and evaluate on the test set."""
+    pbar = tqdm(total=3, desc="Testing Decision Tree")
+
+    pbar.set_postfix_str("Loading data & model")
     x_test, y_test = load_test_data()
     clf = joblib.load(MODEL_PATH)
+    pbar.update(1)
 
+    pbar.set_postfix_str("Predicting")
     y_pred = clf.predict(x_test)
+    pbar.update(1)
+
+    pbar.set_postfix_str("Evaluating")
+    pbar.update(1)
+    pbar.close()
+
     print("Decision Tree Confusion Matrix:")
     print(confusion_matrix(y_test, y_pred))
     print("\nClassification Report:")

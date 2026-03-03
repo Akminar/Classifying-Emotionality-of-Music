@@ -107,7 +107,7 @@ Note: the learning curve retrains the MLP at 10 data sizes across 5 folds, so th
 
 | Run | hidden_dim | dropout | lr | epochs | Mean CV F1 |
 |---|---|---|---|---|---|
-| Baseline | 128 | 0.2 | 0.001 | 30 | |
+| Baseline | 128 | 0.2 | 0.001 | 30 | 0.6472 |
 | A1 | 32 | 0.2 | 0.001 | 30 | 0.6504 |
 | A2 | 64 | 0.2 | 0.001 | 30 | 0.6811 |
 | A3 | 256 | 0.2 | 0.001 | 30 | 0.6531 |

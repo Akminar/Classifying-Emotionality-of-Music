@@ -85,7 +85,7 @@ def merge_features(labels_df, features_df):
 
     tqdm.pandas(desc="Labeling rows")
     merged["label"] = merged.progress_apply(
-        lambda row: int((row["valence_mean"] >= 5) and (0 <= row["arousal_mean"] <= 5)),
+        lambda row: int((row["valence_mean"] >= 5)),
         axis=1,
     )
 
